@@ -1,0 +1,2 @@
+Sequential Time: 4.362885 seconds
+Parallel Time with 4 processes: 1.325876 seconds
