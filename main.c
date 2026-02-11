@@ -16,3 +16,9 @@ double get_time() {
 double *alloc_matrix(int n) {
     return (double *)malloc(sizeof(double) * n * n);
 }
+
+void fill_matrix(double *M, int n) {
+    for (int i = 0; i < n * n; i++)
+        M[i] = random() % 10;
+}
+
