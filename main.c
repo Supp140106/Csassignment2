@@ -54,3 +54,19 @@ void multiply_parallel(double *A, double *B, int n, int m) {
             exit(0);
         }
     }
+    
+double start = get_time();
+    multiply_sequential(A, B, C, n);
+    double end = get_time();
+    printf("Sequential Time: %f seconds\n", end - start);
+
+    start = get_time();
+    multiply_parallel(A, B, n, m);
+    end = get_time();
+    printf("Parallel Time with %d processes: %f seconds\n", m, end - start);
+
+    free(A);
+    free(B);
+    free(C);
+    return 0;
+}
