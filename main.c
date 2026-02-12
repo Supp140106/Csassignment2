@@ -31,3 +31,15 @@ void multiply_sequential(double *A, double *B, double *C, int n) {
 }
 
 
+void compute_rows(double *A, double *B, int n, int start, int end) {
+double *C_part = (double*)malloc(sizeof(double) * (end - start)*n);
+for (int i = start; i < end; i++) 
+    for (int j = 0; j < n; j++) { 
+        C_part[(i-start)*n + j] = 0; 
+        for (int k = 0; k < n; k++)
+C_part[(i-start)*n + j] += A[i*n + k] * B[k*n + j];
+    }
+free(C_part);
+}
+
+                                                              }
