@@ -1,72 +1,83 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <sys/time.h>
 
+#define N 1000
 
-double get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec + tv.tv_usec / 1000000.0;
+double A[N][N], B[N][N], C[N][N], C2[N][N];
+
+double get_time()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec / 1000000.0;
 }
 
-
-double *alloc_matrix(int n) {
-    return (double *)malloc(sizeof(double) * n * n);
-}
-
-void fill_matrix(double *M, int n) {
-    for (int i = 0; i < n * n; i++)
-        M[i] = random() % 10;
-}
-void multiply_sequential(double *A, double *B, double *C, int n) {
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++) {
-            C[i*n + j] = 0;
-            for (int k = 0; k < n; k++)
-                C[i*n + j] += A[i*n + k] * B[k*n + j];
+void init()
+{
+    for(int i=0;i<N;i++)
+        for(int j=0;j<N;j++)
+        {
+            A[i][j]=1;
+            B[i][j]=1;
+            C[i][j]=0;
+            C2[i][j]=0;
         }
 }
 
-
-void compute_rows(double *A, double *B, int n, int start, int end) {
-double *C_part = (double*)malloc(sizeof(double) * (end - start)*n);
-for (int i = start; i < end; i++) 
-    for (int j = 0; j < n; j++) { 
-        C_part[(i-start)*n + j] = 0; 
-        for (int k = 0; k < n; k++)
-C_part[(i-start)*n + j] += A[i*n + k] * B[k*n + j];
-    }
-free(C_part);
+void sequential()
+{
+    for(int i=0;i<N;i++)
+        for(int j=0;j<N;j++)
+            for(int k=0;k<N;k++)
+                C[i][j]+=A[i][k]*B[k][j];
 }
 
+void parallel(int PROCESSES)
+{
+    int rows = N/PROCESSES;
 
-void multiply_parallel(double *A, double *B, int n, int m) {
-    int rows_per_child = n / m;
-    for (int p = 0; p < m; p++) {
+    for(int p=0;p<PROCESSES;p++)
+    {
         pid_t pid = fork();
-        if (pid == 0) {
-            int start = p * rows_per_child;
-            int end = (p == m - 1) ? n : start + rows_per_child;
-            compute_rows(A, B, n, start, end);
+
+        if(pid==0)
+        {
+            int start = p*rows;
+            int end = (p==PROCESSES-1)?N:start+rows;
+
+            for(int i=start;i<end;i++)
+                for(int j=0;j<N;j++)
+                    for(int k=0;k<N;k++)
+                        C2[i][j]+=A[i][k]*B[k][j];
+
             exit(0);
         }
     }
-    
-double start = get_time();
-    multiply_sequential(A, B, C, n);
-    double end = get_time();
-    printf("Sequential Time: %f seconds\n", end - start);
 
-    start = get_time();
-    multiply_parallel(A, B, n, m);
-    end = get_time();
-    printf("Parallel Time with %d processes: %f seconds\n", m, end - start);
+    for(int p=0;p<PROCESSES;p++)
+        wait(NULL);
+}
 
-    free(A);
-    free(B);
-    free(C);
+int main()
+{
+    int PROCESSES = sysconf(_SC_NPROCESSORS_ONLN);
+
+    printf("Available Cores: %d\n", PROCESSES);
+
+    init();
+
+    double t1 = get_time();
+    sequential();
+    double t2 = get_time();
+    printf("Sequential Time: %f seconds\n", t2-t1);
+
+    double t3 = get_time();
+    parallel(PROCESSES);
+    double t4 = get_time();
+    printf("Parallel Time: %f seconds\n", t4-t3);
+
     return 0;
 }
