@@ -42,4 +42,19 @@ C_part[(i-start)*n + j] += A[i*n + k] * B[k*n + j];
 free(C_part);
 }
 
+void multiply_parallel(double *A, double *B, int n, int m) {
+    int rows_per_child = n / m;
+    for (int p = 0; p < m; p++) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            int start = p * rows_per_child;
+            int end = (p == m - 1) ? n : start + rows_per_child;
+            compute_rows(A, B, n, start, end);
+            exit(0);
+        }
+    }
+    
+
+
                                                               }
+
