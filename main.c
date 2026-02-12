@@ -21,4 +21,13 @@ void fill_matrix(double *M, int n) {
     for (int i = 0; i < n * n; i++)
         M[i] = random() % 10;
 }
+void multiply_sequential(double *A, double *B, double *C, int n) {
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++) {
+            C[i*n + j] = 0;
+            for (int k = 0; k < n; k++)
+                C[i*n + j] += A[i*n + k] * B[k*n + j];
+        }
+}
+
 
